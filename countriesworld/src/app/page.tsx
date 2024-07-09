@@ -1,9 +1,35 @@
-import Image from "next/image";
+"use client";
+import Card from "@/components/card";
+import { Root2 } from "@/interface/rootInterface";
+import { getAllCountrie } from "@/service/countrieService";
+import { useEffect, useState } from "react";
 
-export default function Home() {
+export default function App() {
+  const [listCountries, setListCountries] = useState<Root2[]>();
+
+  useEffect(() => {
+    const get = async () => {
+      const rs = await getAllCountrie();
+      setListCountries(rs);
+    };
+
+    get();
+  }, []);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-     <h1>Countries Of World</h1>
+    <main className="bg-slate-300  ">
+      <section className="flex flex-row justify-center gap-8  flex-wrap py-6">
+        {listCountries?.map((countrie, index) => {
+       
+          return (
+            <Card
+              key={index}
+              countrie={countrie.name.common}
+              image={countrie.flags.png}
+            />
+          );
+        })}
+      </section>
     </main>
   );
 }
