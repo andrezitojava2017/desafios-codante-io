@@ -10,21 +10,29 @@ import { getAllBorders, getBordersCountries } from "@/service/countrieService";
 import { useEffect, useState } from "react";
 import { Root2 } from "@/interface/rootInterface";
 import Link from "next/link";
+import { useParams } from 'next/navigation'
 
-const Details = ({ params }: { params: { countrie: string } }) => {
+const Details = () => {
   const [countrieBorders, setCountriesBorders] = useState<Root2[]>();
   const [infoCountrie, setInfoCountrie] = useState<Root2>();
+  const searchParams = useSearchParams();
+  const params = useParams<{ countrie: string }>()
 
   /**
    * Recupera paises que são vizinhos de fronteiras
    */
   const getBorders = async () => {
-
-    const rs = await getBordersCountries(params.countrie);
-    const borders = await getAllBorders(rs[0].borders);
-
-    setInfoCountrie(rs[0]);
-    setCountriesBorders(borders);
+    try {
+      const rs = await getBordersCountries(params.countrie);
+      if (rs[0].borders) {
+        const borders = await getAllBorders(rs[0].borders);
+        setInfoCountrie(rs[0]);
+        setCountriesBorders(borders);
+      }
+      setInfoCountrie(rs[0]);
+    } catch (error) {
+      console.warn("Ocorreu um erro\n", error);
+    }
   };
 
   /**
@@ -32,18 +40,30 @@ const Details = ({ params }: { params: { countrie: string } }) => {
    * @returns
    */
   const flag = () => {
-    const searchParams = useSearchParams();
     const flag = searchParams.get("flag");
 
-    return flag;
+    return flag?.toString()
   };
 
   useEffect(() => {
     (async () => {
       await getBorders();
     })();
+    flag();
   }, []);
 
+  const formatNumber = (value: number) => {
+    if (value >= 1000000) {
+      return (value / 1000000).toFixed(1) + "M";
+    } else if (value >= 1000) {
+      return (value / 1000).toFixed(1) + "K";
+    } else {
+      return value.toString();
+    }
+  };
+  if (!infoCountrie) {
+    return <p>Carregando!</p>;
+  }
   return (
     <section className="bg-slate-300 h-full lg:px-40 md:px-28">
       <div>
@@ -73,7 +93,7 @@ const Details = ({ params }: { params: { countrie: string } }) => {
               field="Continente"
             />
             <DetailCountrie
-              value={infoCountrie?.population.toString() || "0"}
+              value={formatNumber(infoCountrie.population) || "0"}
               icon={<PiUsersFourFill size={14} color="blue" />}
               field="População"
             />
